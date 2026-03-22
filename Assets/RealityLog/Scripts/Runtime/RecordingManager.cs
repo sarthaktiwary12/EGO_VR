@@ -34,6 +34,9 @@ namespace RealityLog
         [Tooltip("Manages body tracking logging (full body skeleton)")]
         [SerializeField] private BodyTrackingLogger[] bodyTrackingLoggers = default!;
 
+        [Tooltip("Manages hand tracking logging (hand skeleton per hand)")]
+        [SerializeField] private HandTrackingLogger[] handTrackingLoggers = default!;
+
         [Tooltip("Manages FPS timing for synchronized capture")]
         [SerializeField] private CaptureTimer captureTimer = default!;
 
@@ -60,6 +63,9 @@ namespace RealityLog
             "hmd_poses.csv",
             "left_controller_poses.csv",
             "right_controller_poses.csv",
+            "hand_tracking_left.csv",
+            "hand_tracking_right.csv",
+            "body_tracking.csv",
         };
 
         public bool IsRecording => isRecording;
@@ -80,6 +86,16 @@ namespace RealityLog
                 if (bodyTrackingLoggers.Length > 0)
                 {
                     Debug.Log($"[{Constants.LOG_TAG}] RecordingManager: Auto-discovered {bodyTrackingLoggers.Length} BodyTrackingLogger(s)");
+                }
+            }
+
+            // Auto-discover hand tracking loggers if not assigned in Inspector
+            if (handTrackingLoggers == null || handTrackingLoggers.Length == 0)
+            {
+                handTrackingLoggers = FindObjectsByType<HandTrackingLogger>(FindObjectsSortMode.None);
+                if (handTrackingLoggers.Length > 0)
+                {
+                    Debug.Log($"[{Constants.LOG_TAG}] RecordingManager: Auto-discovered {handTrackingLoggers.Length} HandTrackingLogger(s)");
                 }
             }
 
@@ -125,6 +141,10 @@ namespace RealityLog
                 {
                     logger.DirectoryName = timestamp;
                 }
+                foreach (var logger in handTrackingLoggers)
+                {
+                    logger.DirectoryName = timestamp;
+                }
             }
             else
             {
@@ -145,6 +165,10 @@ namespace RealityLog
                     logger.DirectoryName = currentSessionDirectory;
                 }
                 foreach (var logger in bodyTrackingLoggers)
+                {
+                    logger.DirectoryName = currentSessionDirectory;
+                }
+                foreach (var logger in handTrackingLoggers)
                 {
                     logger.DirectoryName = currentSessionDirectory;
                 }
@@ -178,6 +202,10 @@ namespace RealityLog
                 logger.StartLogging();
             }
             foreach (var logger in bodyTrackingLoggers)
+            {
+                logger.StartLogging();
+            }
+            foreach (var logger in handTrackingLoggers)
             {
                 logger.StartLogging();
             }
@@ -248,6 +276,10 @@ namespace RealityLog
                 logger.StopLogging();
             }
             foreach (var logger in bodyTrackingLoggers)
+            {
+                logger.StopLogging();
+            }
+            foreach (var logger in handTrackingLoggers)
             {
                 logger.StopLogging();
             }
@@ -348,6 +380,8 @@ namespace RealityLog
                 foreach (var logger in imuLoggers)
                     logger.StopLogging();
                 foreach (var logger in bodyTrackingLoggers)
+                    logger.StopLogging();
+                foreach (var logger in handTrackingLoggers)
                     logger.StopLogging();
 
                 string savedDirectory = currentSessionDirectory ?? string.Empty;

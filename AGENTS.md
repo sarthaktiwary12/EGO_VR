@@ -1,12 +1,23 @@
-# AGENTS.md instructions for /Users/satyamtiwary/Documents/robotic-things/OpenQuestCapture
+# AGENTS.md — EGO_VR
 
 ## Repo Snapshot
 
 - Project type: Unity Quest app (`ProjectSettings/ProjectVersion.txt` -> `6000.2.9f1`).
 - Main scene: `Assets/RealityLog/Scenes/RealityLogScene.unity`.
-- Runtime focus: synchronized camera + depth + pose capture under `Assets/RealityLog/Scripts/Runtime`.
+- Runtime focus: synchronized egocentric video + body pose + hand tracking + IMU capture under `Assets/RealityLog/Scripts/Runtime`.
 - Android bridge: `Assets/Plugins/Android` + `rebuild_kotlin_library.ps1` + `questcameralib.aar`.
-- Submodules: `QuestCameraLib` and `quest-3d-reconstruction` are configured in `.gitmodules` and may be uninitialized locally.
+- Target device: Meta Quest 3 only.
+
+## Purpose
+
+EGO_VR captures multi-modal egocentric data on Meta Quest 3 for research:
+- Egocentric video (passthrough camera, H.264 MP4)
+- Full-body skeleton tracking (84 joints)
+- Hand tracking (24 bones per hand, pinch/confidence data)
+- HMD and controller 6-DOF poses
+- IMU data (200 Hz accelerometer, gyroscope, velocity)
+
+Controllers are used to start/stop recording and manage sessions. Hand tracking captures hand skeleton data when hands are visible.
 
 ## Skills
 
@@ -14,9 +25,9 @@ A skill is a set of local instructions stored in a `SKILL.md` file. Use the skil
 
 ### Available skills
 
-- capture-pipeline: Maintain synchronized camera/depth/pose runtime behavior, timestamp alignment, and recording lifecycle logic. Use for changes in `RecordingManager`, `CaptureTimer`, `DepthMapExporter`, `ImageReaderSurfaceProvider`, `PoseLogger`, or camera session flow. (file: /Users/satyamtiwary/Documents/robotic-things/OpenQuestCapture/.codex/skills/capture-pipeline/SKILL.md)
-- recording-menu-export: Maintain recording menu UI, list rendering, export/delete flows, and world-space menu wiring. Use for changes in `Assets/RealityLog/Scripts/Runtime/UI` or `Runtime/FileOperations/RecordingOperations.cs`. (file: /Users/satyamtiwary/Documents/robotic-things/OpenQuestCapture/.codex/skills/recording-menu-export/SKILL.md)
-- quest-android-bridge: Maintain Unity Android interop, manifest/gradle integration, and QuestCameraLib AAR flow. Use for changes in `Assets/RealityLog/Scripts/Runtime/Camera`, `Assets/Plugins/Android`, or Kotlin/AAR bridge work. (file: /Users/satyamtiwary/Documents/robotic-things/OpenQuestCapture/.codex/skills/quest-android-bridge/SKILL.md)
+- capture-pipeline: Maintain synchronized camera/depth/pose/hand-tracking runtime behavior, timestamp alignment, and recording lifecycle logic. Use for changes in `RecordingManager`, `CaptureTimer`, `DepthMapExporter`, `ImageReaderSurfaceProvider`, `PoseLogger`, `HandTrackingLogger`, `BodyTrackingLogger`, or camera session flow. (file: .codex/skills/capture-pipeline/SKILL.md)
+- recording-menu-export: Maintain recording menu UI, list rendering, export/delete flows, and world-space menu wiring. Use for changes in `Assets/RealityLog/Scripts/Runtime/UI` or `Runtime/FileOperations/RecordingOperations.cs`. (file: .codex/skills/recording-menu-export/SKILL.md)
+- quest-android-bridge: Maintain Unity Android interop, manifest/gradle integration, and QuestCameraLib AAR flow. Use for changes in `Assets/RealityLog/Scripts/Runtime/Camera`, `Assets/Plugins/Android`, or Kotlin/AAR bridge work. (file: .codex/skills/quest-android-bridge/SKILL.md)
 
 ### How to use skills
 
@@ -32,16 +43,6 @@ A skill is a set of local instructions stored in a `SKILL.md` file. Use the skil
   - Keep cross-skill changes explicit (call out boundaries between runtime, UI/export, and Android bridge).
 - Fallback:
   - If a skill file is missing or unreadable, state the issue and continue with best-effort repository inspection.
-
-## Controller-to-Gripper Calibration
-
-Quest 3 controllers are **permanently mounted** to Genrobot gripper bodies via 3D-printed fixtures + super glue. Each gripper (left and right) has a unique rigid transform from the controller tracking frame to the gripper TCP.
-
-- Calibration data: `calibration/controller_to_gripper_transforms.json`
-- Documentation: `calibration/README.md`
-- `PoseLogger` records raw controller poses (`HandLeft` / `HandRight` nodes). To obtain gripper TCP poses, apply the calibrated `T_controller_to_gripper` transform.
-- Transforms are **per-physical-gripper** — they only change if a fixture is rebuilt or a controller is remounted.
-- Left and right transforms are independent and distinct.
 
 ## Repo Guardrails
 

@@ -1,242 +1,109 @@
-# OpenQuestCapture
+# EGO_VR
 
-[![](https://dcbadge.limes.pink/api/server/y5v3BTXAUd)](https://discord.gg/y5v3BTXAUd)
+**Egocentric multi-modal data capture on Meta Quest 3**
 
-**Capture and store real-world sensor data on Meta Quest 3**
-
-
-![Demo](docs/demo.gif)
-
-**[Watch the full pipeline in action](https://www.youtube.com/watch?v=brcnfMmwRq8)** - See how data is captured on Quest and reconstructed into a 3D scene. *(Thank you to EggMan28 for the demo!)*
+Record synchronized egocentric video, body pose, hand tracking, controller poses, and IMU data for research and data collection.
 
 ---
 
-## 🙏 Acknowledgement
+## Overview
 
-First I'd like to acknowledge the work of the author of QuestRealityCapture. This project largely is built on top of the Quest sensor data capture platform / library that they built. **[QuestRealityCapture](https://github.com/t-34400/QuestRealityCapture)** by **[t-34400](https://github.com/t-34400)**.
+`EGO_VR` is a Unity-based multi-modal data collection tool for Meta Quest 3. It captures synchronized streams of egocentric sensor data:
 
-Huge thanks to the original author for their excellent work in making Quest sensor data accessible!
+* **Egocentric video** — compressed passthrough camera stream (`.mp4`, left camera, H.264)
+* **Body pose** — full-body skeleton tracking (84 joints via `XR_META_body_tracking_full_body`)
+* **Hand tracking** — per-hand skeleton data (24 bone rotations, pinch strengths, root pose, confidence)
+* **Controller poses** — HMD and controller 6-DOF tracking (`hmd_poses.csv`, `left_controller_poses.csv`, `right_controller_poses.csv`)
+* **IMU data** — linear acceleration, gyroscope, velocity, angular acceleration at 200 Hz
+* **Camera intrinsics** — Camera2 API characteristics (fx, fy, cx, cy, distortion, sensor info)
+* **Device metadata** — device serial, OS, GPU, Unity version, headset type
 
----
-
-## 📖 Overview
-
-`OpenQuestCapture` is a Unity-based data logging tool for Meta Quest 3 focused on long-duration robotics data collection.  
-The default capture pipeline now records:
-
-* one compressed passthrough camera video (`.mp4`, left camera stream)
-* synchronized pose logs (`hmd_poses.csv`, controller poses)
-* synchronized IMU logs (`imu.csv`)
-* camera characteristics JSON
-
-Depth capture and dual raw-YUV capture are disabled by default to reduce storage pressure for multi-hour recording shifts.
+All streams are time-synchronized using OVR timestamps aligned to Unix time.
 
 ---
 
----
+## Quick Start
 
-## ✅ Features
-
-* Records HMD/controller poses and IMU data (session-based)
-* Captures one compressed passthrough camera stream to `center_camera.mp4`
-* Logs Camera2 characteristics for the selected camera stream
-* Uses timestamped session directories for long-run collection
-* Keeps recording menu export/delete flows for storage management
-
-
-### Quick Start Guide
-
-1. **Install the app**: Download from [SideQuest](https://sidequestvr.com/app/45514) or sideload the APK file from the Releases section of this repository. [This video](https://www.youtube.com/watch?v=bsC805t63-E) has a good guide on how to set up sideloading.
-2. **!!! IMPORTANT !!! Enable permissions**: **When you first launch the app, make sure to check "Enable Headset Cameras" when the permissions are asked for.**
-3. **Start recording**: Launch the app and press the Menu button on the left controller to start a capture session.
-4. **Stop recording**: To stop, press the left controller's Menu button again.
-5. **Move the data from your Quest to your computer**: The data is stored on the Quest's internal storage. You can move it to your computer using a USB cable by connecting the Quest to your computer and using Windows File Explorer. The data is stored in the `/Quest 3/Internal Shared Storage/data/com.samusynth.OpenQuestCapture/files` directory.
-Or, you can use press the Y button on the left controller to toggle the Recording Menu. Select "Export Data" to export the data to a zip file in the Quest 3 Download folder which can be uploaded to Google Drive or other cloud storage services.
-6. **Post-process on laptop**: Combine `center_camera.mp4` + pose/IMU CSV files into your downstream format (for example, MCAP/Foxglove pipelines).
-
-### 📸 How to take a good capture
-
-To ensure stable long-form robotics capture:
-
-1.  **Lighting**: Ensure the environment is well-lit and consistent. Avoid extreme shadows or blinding lights.
-2.  **Movement**: Move steadily and avoid rapid head snaps that cause motion blur.
-3.  **Session length**: For shift workflows, run longer sessions and export/delete regularly from the recording menu.
+1. **Build & sideload** the APK to your Meta Quest 3.
+2. **Enable permissions**: When first launching, grant Camera and Body/Hand Tracking permissions.
+3. **Start recording**: Press the **Menu button** on the left controller to start capture.
+4. **Stop recording**: Press the Menu button again to stop.
+5. **Manage recordings**: Press **Y button** on the left controller to open the Recording Menu (export, delete sessions).
+6. **Transfer data**: Connect Quest 3 via USB or export to ZIP from the Recording Menu.
 
 ---
 
-## 🧾 Data Structure
+## Data Structure
 
-Each time you start recording, a new folder is created under:
+Each recording session creates a timestamped directory:
 
 ```
-/sdcard/Android/data/com.samusynth.OpenQuestCapture/files
-```
-
-Example structure:
-
-```
-/sdcard/Android/data/com.samusynth.OpenQuestCapture/files
+/sdcard/Android/data/com.samusynth.OpenQuestCapture/files/
 └── YYYYMMDD_hhmmss/
-    ├── center_camera.mp4
-    ├── left_camera_characteristics.json
+    ├── center_camera.mp4                    # Egocentric video (H.264)
+    ├── center_camera_characteristics.json   # Camera intrinsics
     │
-    ├── hmd_poses.csv
-    ├── left_controller_poses.csv
-    ├── right_controller_poses.csv
-    └── imu.csv
+    ├── hmd_poses.csv                        # Head tracking (6-DOF)
+    ├── left_controller_poses.csv            # Left controller pose
+    ├── right_controller_poses.csv           # Right controller pose
+    │
+    ├── hand_tracking_left.csv               # Left hand skeleton
+    ├── hand_tracking_right.csv              # Right hand skeleton
+    ├── body_tracking.csv                    # Full body skeleton (84 joints)
+    │
+    ├── imu.csv                              # IMU: accel, gyro, velocity (200 Hz)
+    ├── video_metadata.json                  # Video timing metadata
+    ├── device_info.json                     # Device info
+    └── video_start_time.txt                 # Unix ms of first video frame
 ```
 
 ---
 
-## 📄 Data Format Details
+## Data Format Details
 
 ### Pose CSV
 
 * Files: `hmd_poses.csv`, `left_controller_poses.csv`, `right_controller_poses.csv`
-* Format:
+* Format: `unix_time, ovr_timestamp, pos_x, pos_y, pos_z, rot_x, rot_y, rot_z, rot_w`
 
-  ```
-  unix_time,ovr_timestamp,pos_x,pos_y,pos_z,rot_x,rot_y,rot_z,rot_w
-  ```
+### Hand Tracking CSV
 
-### Camera Characteristics (JSON)
+* Files: `hand_tracking_left.csv`, `hand_tracking_right.csv`
+* Per row: timestamp, tracking status, hand confidence, root pose (pos + rot), hand scale, pinch strengths (5 fingers), finger confidences (5 fingers), bone rotations (24 bones x quaternion xyzw)
 
-* Obtained via Android Camera2 API
-* Includes pose, intrinsics (fx, fy, cx, cy), sensor info, etc.
+### Body Tracking CSV
+
+* File: `body_tracking.csv`
+* Per row: timestamp, confidence, calibration status, fidelity, then 84 joint positions + orientations
+
+### IMU CSV
+
+* File: `imu.csv`
+* Format: `unix_time, ovr_timestamp, linear_acc_x/y/z, gyro_x/y/z, vel_x/y/z, ang_acc_x/y/z`
+* Sampling: 200 Hz on dedicated background thread
 
 ### Camera Video (MP4)
 
 * File: `center_camera.mp4`
 * Codec: H.264 inside MP4 container
-* Intended for long-duration collection where storage efficiency is critical
+* Default: 30 FPS, 4 Mbps bitrate
 
 ---
 
-## 🚀 Installation & Usage
-
-### For End Users
-
-**Option 1: Install via SideQuest**
-
-Download and install directly from [SideQuest](https://sidequestvr.com/app/45514).
-
-**Option 2: Manual Sideloading**
-
-Side-loading is required to install this app on the Quest. [This video](https://www.youtube.com/watch?v=bsC805t63-E) has a good guide on how to set up sideloading. The most up to date APK can be found in the [Releases](https://github.com/samuelm2/OpenQuestCapture/releases) section of this repository.
-
-
-## 🎮 Usage
-
-### Recording & Management
-
-1. **Start/Stop Recording**: 
-   - Launch the app.
-   - Press the **Menu button** on the left controller to dismiss the instruction panel and start logging.
-   - To stop, simply close the app or pause the session.
-
-2. **Manage Recordings**:
-   - Press the **Y button** on the left controller to toggle the **Recording Menu**.
-   - This menu allows you to:
-     - **View** a list of all recorded sessions.
-     - **Export** sessions to a zip file (saved directly to the Quest Downloads folder: `/Download/Export/`).
-     - **Delete** unwanted sessions to free up space.
-
-
----
-
-## ☁️ Cloud Processing (Recommended)
-
-For the easiest workflow, you can upload your exported `.zip` files directly to the vid2scene cloud processing service:
-
-**[vid2scene.com/upload/quest](https://vid2scene.com/upload/quest)**
-
-This service will automatically process your data and generate a 3D reconstruction.
-
----
-
-## 💻 Local Processing & Reconstruction
-
-If you prefer to process data locally, this project includes a submodule **[quest-3d-reconstruction](https://github.com/samuelm2/quest-3d-reconstruction)** with powerful Python scripts.
-
-### Setup
-
-Ensure you have the submodule initialized:
-
-```bash
-git submodule update --init --recursive
-```
-
-### End-to-End Pipeline
-
-The `e2e_quest_to_colmap.py` script provides a one-step solution to convert your Quest data into a COLMAP format.
-
-**Usage Example:**
-
-```bash
-python quest-3d-reconstruction/scripts/e2e_quest_to_colmap.py \
-  --project_dir /path/to/extracted/session/folder \
-  --output_dir /path/to/output/colmap/project \ 
-  --use_colored_pointcloud
-```
-
-Once in colmap format, the reconstruction can be passed into various Gaussian Splatting tools to generate a Gaussian Splatting scene.
-
-**What this script does:**
-1. **Converts YUV images** to RGB.
-2. **Reconstructs the 3D scene** (point cloud).
-3. **Exports** everything (images, cameras, points) to a COLMAP sparse model.
-
----
-
-## 🎨 Tone Mapping for Indoor Scenes
-
-If you're capturing indoor scenes with windows, you may notice that bright window light can blow out the interior lighting, resulting in overexposed highlights and underexposed shadows. The reconstruction pipeline includes **tone mapping** (CLAHE + gamma correction) to fix this issue during YUV→RGB conversion.
-
-This is **especially effective for indoor environments** where natural light from windows creates high dynamic range conditions that exceed the camera's capture capability.
-
-### How to Enable
-
-Edit `quest-3d-reconstruction/config/pipeline_config.yml` before running the reconstruction:
-
-```yaml
-yuv_to_rgb:
-  tone_mapping: true              # Enable tone mapping
-  tone_mapping_method: "clahe+gamma"  # Options: "clahe", "gamma", "clahe+gamma"
-  clahe_clip_limit: 2.0           # Contrast enhancement (1.0-4.0)
-  clahe_tile_grid_size: 8         # Local adaptation grid size (4-16)
-  gamma_correction: 1.2           # Brightness boost (>1 brightens)
-```
-
-Then run the pipeline as normal. The tone mapping will be applied automatically when converting YUV images to RGB.
-
-For more details and advanced options, see the full documentation in the [quest-3d-reconstruction README](https://github.com/samuelm2/quest-3d-reconstruction#-tone-mapping-for-high-dynamic-range-scenes).
-
----
-
-## 🛠 Environment
+## Environment
 
 * Unity **6000.2.9f1**
 * Meta OpenXR SDK
-* Meta MRUK (Mixed Reality Utility Kit)
-* Device: Meta Quest 3 or 3s only
-
+* Device: **Meta Quest 3** only
 
 ---
 
-## 📝 License
+## Acknowledgement
+
+Built on top of **[OpenQuestCapture](https://github.com/sarthaktiwary12/OpenQuestCapture)** and the original **[QuestRealityCapture](https://github.com/t-34400/QuestRealityCapture)** by **[t-34400](https://github.com/t-34400)**.
+
+---
+
+## License
 
 This project is licensed under the **[MIT License](LICENSE)**.
-
-This project uses Meta’s OpenXR SDK — please ensure compliance with its license when redistributing.
-
----
-
-## 📌 Call for Contributions
-
-This project is in its early stages and is still in active development. If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
-
-Join our Discord community to discuss ideas, get help, and share your captures with other users:
-
-[![](https://dcbadge.limes.pink/api/server/y5v3BTXAUd)](https://discord.gg/y5v3BTXAUd)
-
-One area improvment is the export process. Currently it can take several minutes to export a session. It would be great to have a faster way to do this.

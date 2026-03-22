@@ -66,6 +66,7 @@ sysinfo.txt
 *.apk
 *.aab
 *.aar
+!Assets/Plugins/Android/questcameralib.aar
 *.unitypackage
 *.unitypackage.meta
 *.app

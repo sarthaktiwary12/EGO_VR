@@ -7518,6 +7518,8 @@ GameObject:
   - component: {fileID: 1104910061}
   - component: {fileID: 1104910062}
   - component: {fileID: 1104910063}
+  - component: {fileID: 1104910070}
+  - component: {fileID: 1104910071}
   - component: {fileID: 2200000020}
   m_Layer: 0
   m_Name: RealityLog
@@ -7677,6 +7679,38 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: RealityLog.OVR::RealityLog.OVR.BodyTrackingLogger
   fileName: body_tracking.csv
+  directoryName:
+  startLoggingOnStart: 0
+--- !u!114 &1104910070
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1104910057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e33f067f965b449cac5b144bd8874d6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RealityLog.OVR::RealityLog.OVR.HandTrackingLogger
+  hand: 0
+  fileName: hand_tracking_left.csv
+  directoryName:
+  startLoggingOnStart: 0
+--- !u!114 &1104910071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1104910057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e33f067f965b449cac5b144bd8874d6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RealityLog.OVR::RealityLog.OVR.HandTrackingLogger
+  hand: 1
+  fileName: hand_tracking_right.csv
   directoryName:
   startLoggingOnStart: 0
 --- !u!114 &1104910063

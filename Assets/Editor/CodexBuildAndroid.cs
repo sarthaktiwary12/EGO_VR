@@ -19,7 +19,7 @@ public static class CodexBuildAndroid
         var outputPath = Environment.GetEnvironmentVariable("CODEX_BUILD_APK_PATH");
         if (string.IsNullOrWhiteSpace(outputPath))
         {
-            outputPath = "Builds/OpenQuestCapture.apk";
+            outputPath = "Builds/EGO-VR.apk";
         }
 
         var fullOutputPath = Path.GetFullPath(outputPath);
