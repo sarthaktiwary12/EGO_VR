@@ -11,7 +11,7 @@ namespace RealityLog.Camera
 {
     public class VideoRecorderSurfaceProvider : SurfaceProviderBase
     {
-        private const string VIDEO_RECORDER_SURFACE_PROVIDER_CLASS_NAME = "com.samusynth.questcamera.io.VideoRecorderSurfaceProvider";
+        private const string VIDEO_RECORDER_SURFACE_PROVIDER_CLASS_NAME = "com.samusynth.questcamera.io.AudioVideoRecorderSurfaceProvider";
         private const string UPDATE_OUTPUT_FILE_METHOD_NAME = "updateOutputFile";
         private const string START_RECORDING_METHOD_NAME = "startRecording";
         private const string STOP_RECORDING_METHOD_NAME = "stopRecording";
@@ -314,7 +314,11 @@ namespace RealityLog.Camera
                     $"  \"recording_start_unix_ms\": {VideoStartUnixTimeMs},\n" +
                     $"  \"recording_stop_unix_ms\": {stopUnixMs},\n" +
                     $"  \"configured_fps\": {targetFrameRate},\n" +
-                    $"  \"video_file\": \"{outputVideoFileName}\"\n" +
+                    $"  \"video_file\": \"{outputVideoFileName}\",\n" +
+                    $"  \"audio_enabled\": true,\n" +
+                    $"  \"audio_codec\": \"AAC\",\n" +
+                    $"  \"audio_sample_rate_hz\": 48000,\n" +
+                    $"  \"audio_channels\": 1\n" +
                     $"}}";
                 File.WriteAllText(metadataPath, json);
                 Debug.Log($"[{Constants.LOG_TAG}] VideoRecorderSurfaceProvider wrote {metadataPath}");

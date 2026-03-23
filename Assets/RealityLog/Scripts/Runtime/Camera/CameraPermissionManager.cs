@@ -71,6 +71,12 @@ namespace RealityLog.Camera
         {
             DestroyInstance();
 
+            // Request microphone permission for audio recording in video capture
+            if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission("android.permission.RECORD_AUDIO"))
+            {
+                UnityEngine.Android.Permission.RequestUserPermission("android.permission.RECORD_AUDIO");
+            }
+
             using (AndroidJavaClass unityPlayerClazz = new AndroidJavaClass(Constants.UNITY_PLAYER_CLASS_NAME))
             using (AndroidJavaObject currentActivity = unityPlayerClazz.GetStatic<AndroidJavaObject>(Constants.UNITY_PLAYER_CURRENT_ACTIVITY_VARIABLE_NAME))
             {
